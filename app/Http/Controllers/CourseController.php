@@ -2,19 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Mail\Mailer;
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\FileUploader;
 use App\Models\Lesson;
 use App\Models\Question;
 use App\Models\QuizSubmission;
-use App\Models\FileUploader;
 use App\Models\Section;
 use App\Models\SeoField;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
@@ -24,12 +21,12 @@ class CourseController extends Controller
 {
     public function index(Request $request)
     {
-        $category   = 'all';
-        $status     = 'all';
+        $category = 'all';
+        $status = 'all';
         $instructor = 'all';
-        $price      = 'all';
+        $price = 'all';
 
-        $query  = Course::query();
+        $query = Course::query();
         $query1 = Course::query();
 
         if (isset($request->category) && $request->category != '' && $request->category != 'all') {
@@ -37,11 +34,11 @@ class CourseController extends Controller
             $category_details = Category::where('slug', $request->category)->first();
             if ($category_details->parent_id > 0) {
                 $page_data['child_cat'] = $request->category;
-                $query                  = $query->where('category_id', $category_details->id);
+                $query = $query->where('category_id', $category_details->id);
             } else {
-                $sub_cat_id              = Category::where('parent_id', $category_details->id)->pluck('id')->toArray();
+                $sub_cat_id = Category::where('parent_id', $category_details->id)->pluck('id')->toArray();
                 $sub_cat_id[] = $category_details->id;
-                $query                   = $query->whereIn('category_id', $sub_cat_id);
+                $query = $query->whereIn('category_id', $sub_cat_id);
                 $page_data['parent_cat'] = $request->category;
             }
         }
@@ -64,7 +61,7 @@ class CourseController extends Controller
         }
         // selected instructor
         if (isset($_GET['instructor']) && $_GET['instructor'] != '' && $_GET['instructor'] != 'all') {
-            $query      = $query->where('user_id', $_GET['instructor']);
+            $query = $query->where('user_id', $_GET['instructor']);
             $instructor = $_GET['instructor'];
         }
 
@@ -73,34 +70,34 @@ class CourseController extends Controller
 
             if ($_GET['status'] == 'active') {
                 $search_status = 'active';
-                $query         = $query->where('status', $search_status);
+                $query = $query->where('status', $search_status);
             } elseif ($_GET['status'] == 'inactive') {
                 $search_status = 'inactive';
-                $query         = $query->where('status', $search_status);
+                $query = $query->where('status', $search_status);
             } elseif ($_GET['status'] == 'pending') {
                 $search_status = 'pending';
-                $query         = $query->where('status', $search_status);
+                $query = $query->where('status', $search_status);
             } elseif ($_GET['status'] == 'private') {
                 $search_status = 'private';
-                $query         = $query->where('status', $search_status);
+                $query = $query->where('status', $search_status);
             } elseif ($_GET['status'] == 'upcoming') {
                 $search_status = 'upcoming';
-                $query         = $query->where('status', $search_status);
+                $query = $query->where('status', $search_status);
             } elseif ($_GET['status'] == 'draft') {
                 $search_status = 'draft';
-                $query         = $query->where('status', $search_status);
+                $query = $query->where('status', $search_status);
             }
             $status = $_GET['status'];
         }
-        $page_data['status']           = $status;
-        $page_data['instructor']       = $instructor;
-        $page_data['price']            = $price;
-        $page_data['courses']          = $query->orderBy('id', 'desc')->paginate(20)->appends(request()->query());
-        $page_data['pending_courses']  = Course::where('status', 'pending')->count();
-        $page_data['active_courses']   = Course::where('status', 'active')->count();
+        $page_data['status'] = $status;
+        $page_data['instructor'] = $instructor;
+        $page_data['price'] = $price;
+        $page_data['courses'] = $query->orderBy('id', 'desc')->paginate(20)->appends(request()->query());
+        $page_data['pending_courses'] = Course::where('status', 'pending')->count();
+        $page_data['active_courses'] = Course::where('status', 'active')->count();
         $page_data['upcoming_courses'] = Course::where('status', 'upcoming')->count();
-        $page_data['paid_courses']     = Course::where('is_paid', 1)->count();
-        $page_data['free_courses']     = Course::where('is_paid', 0)->count();
+        $page_data['paid_courses'] = Course::where('is_paid', 1)->count();
+        $page_data['free_courses'] = Course::where('is_paid', 0)->count();
 
         return view('admin.course.index', $page_data);
     }
@@ -113,44 +110,54 @@ class CourseController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title'                 => 'required|max:255',
-            'category_id'           => 'required|numeric|min:1',
-            'course_type'           => 'required|in:general,scorm',
-            'status'                => 'required|in:active,pending,draft,private,upcoming,inactive',
-            'level'                 => 'required|in:everyone,beginner,intermediate,advanced',
-            'language'              => 'required',
-            'is_paid'               => Rule::in(['0', '1']),
-            'price'                 => 'required_if:is_paid,1|min:1|nullable|numeric',
-            'discount_flag'         => Rule::in(['', '1']),
-            'discounted_price'      => 'required_if:discount_flag,1|min:1|nullable|numeric',
-            'enable_drip_content'   => Rule::in(['0', '1']),
-            'requirements'          => 'array',
-            'outcomes'              => 'array',
-            'faqs'                  => 'array',
-            'instructors'           => 'required|array|min:1',
+            'title' => 'required|max:255',
+            'category_id' => 'required|numeric|min:1',
+            'course_type' => 'required|in:general,scorm',
+            'status' => 'required|in:active,pending,draft,private,upcoming,inactive',
+            'level' => 'required|in:everyone,beginner,intermediate,advanced',
+            'language' => 'required',
+            'is_paid' => Rule::in(['0', '1']),
+            'price' => 'required_if:is_paid,1|min:1|nullable|numeric',
+            'discount_flag' => Rule::in(['', '1']),
+            'discounted_price' => 'required_if:discount_flag,1|min:1|nullable|numeric',
+            'enable_drip_content' => Rule::in(['0', '1']),
+            'requirements' => 'array',
+            'outcomes' => 'array',
+            'faqs' => 'array',
+            'instructors' => 'required|array|min:1',
+            'c_course_type' => 'required|in:recorded,session,live',
+            'c_class_starts' => 'required_if:c_course_type,session,live|max:255',
+            'c_class_time' => 'max:255',
+            'c_number_of_class' => 'int|max:255',
+            'c_batch_number' => 'int|max:255',
         ]);
         //for normal form submission
 
-        $data['title']                 = $request->title;
-        $data['slug']                  = slugify($request->title);
-        $data['user_id']               = auth()->user()->id;
-        $data['category_id']           = $request->category_id;
-        $data['course_type']           = $request->course_type;
-        $data['status']                = $request->status;
-        $data['level']                 = $request->level;
-        $data['language']              = strtolower($request->language);
-        $data['is_paid']               = $request->is_paid;
-        $data['price']                 = $request->price;
-        $data['discount_flag']         = $request->discount_flag;
-        $data['discounted_price']      = $request->discounted_price;
-        $data['enable_drip_content']   = $request->enable_drip_content;
+        $data['title'] = $request->title;
+        $data['slug'] = slugify($request->title);
+        $data['user_id'] = auth()->user()->id;
+        $data['category_id'] = $request->category_id;
+        $data['course_type'] = $request->course_type;
+        $data['status'] = $request->status;
+        $data['level'] = $request->level;
+        $data['language'] = strtolower($request->language);
+        $data['is_paid'] = $request->is_paid;
+        $data['price'] = $request->price;
+        $data['discount_flag'] = $request->discount_flag;
+        $data['discounted_price'] = $request->discounted_price;
+        $data['enable_drip_content'] = $request->enable_drip_content;
+        $data['c_course_type'] = $request->c_course_type;
+        $data['c_class_starts'] = $request->c_class_starts;
+        $data['c_class_time'] = $request->c_class_time;
+        $data['c_number_of_class'] = $request->c_number_of_class;
+        $data['c_batch_number'] = $request->c_batch_number;
 
 
         $drip_content_settings = '{"lesson_completion_role":"percentage","minimum_duration":15,"minimum_percentage":"30","locked_lesson_message":"&lt;h3 xss=&quot;removed&quot; style=&quot;text-align: center; &quot;&gt;&lt;span xss=&quot;removed&quot;&gt;&lt;strong&gt;Permission denied!&lt;\/strong&gt;&lt;\/span&gt;&lt;\/h3&gt;&lt;p xss=&quot;removed&quot; style=&quot;text-align: center; &quot;&gt;&lt;span xss=&quot;removed&quot;&gt;This course supports drip content, so you must complete the previous lessons.&lt;\/span&gt;&lt;\/p&gt;"}';
 
         $data['drip_content_settings'] = $drip_content_settings;
 
-        $meta_keywords     = '';
+        $meta_keywords = '';
         $meta_keywords_arr = json_decode($request->meta_keywords, true);
         if (is_array($meta_keywords_arr)) {
             foreach ($meta_keywords_arr as $key => $keyword) {
@@ -161,11 +168,11 @@ class CourseController extends Controller
                 }
             }
         }
-        $data['meta_keywords']    = $meta_keywords;
+        $data['meta_keywords'] = $meta_keywords;
         $data['meta_description'] = $request->meta_description;
 
         $data['short_description'] = $request->short_description;
-        $data['description']       = $request->description;
+        $data['description'] = $request->description;
 
         //Course expiry period
         if ($request->expiry_period == 'limited_time' && is_numeric($request->number_of_month) && $request->number_of_month > 0) {
@@ -177,11 +184,11 @@ class CourseController extends Controller
         //Remove empty value by using array filter function
         if (isset($request->requirements) && $request->requirements != '') {
 
-            $data['requirements'] = json_encode(array_filter($request->requirements, fn ($value) => !is_null($value) && $value !== ''));
+            $data['requirements'] = json_encode(array_filter($request->requirements, fn($value) => !is_null($value) && $value !== ''));
         }
         if (isset($request->outcomes) && $request->outcomes != '') {
 
-            $data['outcomes'] = json_encode(array_filter($request->outcomes, fn ($value) => !is_null($value) && $value !== ''));
+            $data['outcomes'] = json_encode(array_filter($request->outcomes, fn($value) => !is_null($value) && $value !== ''));
         }
 
         if (isset($request->faq_title) && $request->faq_title != '') {
@@ -196,8 +203,8 @@ class CourseController extends Controller
         }
 
         $data['instructor_ids'] = json_encode($request->instructors);
-        $data['created_at']  = date('Y-m-d H:i:s');
-        $data['updated_at']  = date('Y-m-d H:i:s');
+        $data['created_at'] = date('Y-m-d H:i:s');
+        $data['updated_at'] = date('Y-m-d H:i:s');
 
         if ($request->thumbnail) {
             $data['thumbnail'] = "uploads/course-thumbnail/" . nice_file_name($request->title, $request->thumbnail->extension());
@@ -221,14 +228,6 @@ class CourseController extends Controller
         return redirect(route('admin.course.edit', ['id' => $course_id]))->with('success', get_phrase('Course added successfully'));
     }
 
-    public function edit($course_id = "", Request $request)
-    {
-
-        $data['course_details'] = Course::where('id', $course_id)->first();
-        $data['sections']       = Section::where('course_id', $course_id)->orderBy('sort')->get();
-        return view('admin.course.edit', $data);
-    }
-
     public function update(Request $request, $id)
     {
         $query = Course::where('id', $id);
@@ -241,34 +240,34 @@ class CourseController extends Controller
         $rules = $data = [];
         if ($request->tab == 'basic') {
             $rules = [
-                'title'       => 'required|max:255',
+                'title' => 'required|max:255',
                 'category_id' => 'required|numeric|min:1',
-                'level'       => 'required|in:everyone,beginner,intermediate,advanced',
-                'language'    => 'required',
-                'status'      => 'required|in:active,pending,draft,private,upcoming,inactive',
+                'level' => 'required|in:everyone,beginner,intermediate,advanced',
+                'language' => 'required',
+                'status' => 'required|in:active,pending,draft,private,upcoming,inactive',
                 'instructors' => 'required|array|min:1',
             ];
 
-            $data['title']             = $request->title;
-            $data['slug']              = slugify($request->title . '-' . $id);
+            $data['title'] = $request->title;
+            $data['slug'] = slugify($request->title . '-' . $id);
             $data['short_description'] = $request->short_description;
-            $data['description']       = removeScripts($request->description);
-            $data['category_id']       = $request->category_id;
-            $data['level']             = $request->level;
-            $data['language']          = strtolower($request->language);
-            $data['status']            = $request->status;
-            $data['instructor_ids']       = json_encode($request->instructors);
+            $data['description'] = removeScripts($request->description);
+            $data['category_id'] = $request->category_id;
+            $data['level'] = $request->level;
+            $data['language'] = strtolower($request->language);
+            $data['status'] = $request->status;
+            $data['instructor_ids'] = json_encode($request->instructors);
         } elseif ($request->tab == 'pricing') {
             $rules = [
-                'is_paid'          => Rule::in(['0', '1']),
-                'price'            => 'required_if:is_paid,1|min:1|nullable|numeric',
-                'discount_flag'    => Rule::in(['', '1']),
+                'is_paid' => Rule::in(['0', '1']),
+                'price' => 'required_if:is_paid,1|min:1|nullable|numeric',
+                'discount_flag' => Rule::in(['', '1']),
                 'discounted_price' => 'required_if:discount_flag,1|min:1|nullable|numeric',
             ];
 
-            $data['is_paid']          = $request->is_paid;
-            $data['price']            = $request->price;
-            $data['discount_flag']    = $request->discount_flag;
+            $data['is_paid'] = $request->is_paid;
+            $data['price'] = $request->price;
+            $data['discount_flag'] = $request->discount_flag;
             $data['discounted_price'] = $request->discounted_price;
 
             //Course expiry period
@@ -281,13 +280,13 @@ class CourseController extends Controller
         } elseif ($request->tab == 'info') {
             $rules = [
                 'requirements' => 'array',
-                'outcomes'     => 'array',
-                'faqs'         => 'array',
+                'outcomes' => 'array',
+                'faqs' => 'array',
             ];
 
             //Remove empty value by using array filter function
-            $data['requirements'] = json_encode(array_filter($request->requirements, fn ($value) => !is_null($value) && $value !== ''));
-            $data['outcomes']     = json_encode(array_filter($request->outcomes, fn ($value) => !is_null($value) && $value !== ''));
+            $data['requirements'] = json_encode(array_filter($request->requirements, fn($value) => !is_null($value) && $value !== ''));
+            $data['outcomes'] = json_encode(array_filter($request->outcomes, fn($value) => !is_null($value) && $value !== ''));
 
             $faqs = [];
             foreach ($request->faq_title as $key => $title) {
@@ -309,14 +308,14 @@ class CourseController extends Controller
                 remove_file($query->first()->banner);
             }
 
-            if($request->preview_video_provider == 'link'){
+            if ($request->preview_video_provider == 'link') {
                 $data['preview'] = $request->preview_link;
-            }elseif($request->preview_video_provider == 'file' && $request->preview){
+            } elseif ($request->preview_video_provider == 'file' && $request->preview) {
                 $data['preview'] = "uploads/course-preview/" . nice_file_name($request->title, $request->preview->extension());
                 FileUploader::upload($request->preview, $data['preview']);
                 remove_file($query->first()->preview);
             }
-            
+
         } elseif ($request->tab == 'seo') {
             $course_details = $query->first();
             $SeoField = SeoField::where('name_route', 'course.details')->where('course_id', $course_details->id)->first();
@@ -365,10 +364,10 @@ class CourseController extends Controller
             }
         } elseif ($request->tab == 'drip-content') {
             $rules = [
-                'enable_drip_content'   => Rule::in(['0', '1']),
+                'enable_drip_content' => Rule::in(['0', '1']),
             ];
 
-            $data['enable_drip_content']   = $request->enable_drip_content;
+            $data['enable_drip_content'] = $request->enable_drip_content;
 
             $lesson_completion_role = htmlspecialchars($request->input('lesson_completion_role'));
             $minimum_duration_input = htmlspecialchars($request->input('minimum_duration'));
@@ -381,9 +380,9 @@ class CourseController extends Controller
 
             $drip_data = [
                 'lesson_completion_role' => $lesson_completion_role,
-                'minimum_duration'       => $seconds,
-                'minimum_percentage'     => $minimum_percentage,
-                'locked_lesson_message'  => $locked_lesson_message,
+                'minimum_duration' => $seconds,
+                'minimum_percentage' => $minimum_percentage,
+                'locked_lesson_message' => $locked_lesson_message,
             ];
 
             $data['drip_content_settings'] = json_encode($drip_data);
@@ -400,6 +399,14 @@ class CourseController extends Controller
         //For ajax form submission
         return ['success' => get_phrase('Course updated successfully')];
 
+    }
+
+    public function edit($course_id = "", Request $request)
+    {
+
+        $data['course_details'] = Course::where('id', $course_id)->first();
+        $data['sections'] = Section::where('course_id', $course_id)->orderBy('sort')->get();
+        return view('admin.course.edit', $data);
     }
 
     public function status($type, $id)
@@ -505,8 +512,8 @@ class CourseController extends Controller
         unset($data['id'], $data['created_at'], $data['updated_at']);
 
         // insert as new course
-        $course_id  = Course::insertGetId($data);
-        Course::where('id', $course_id)->update(['slug' => slugify($data['title']).'-'.$course_id]);
+        $course_id = Course::insertGetId($data);
+        Course::where('id', $course_id)->update(['slug' => slugify($data['title']) . '-' . $course_id]);
 
         // go to edit
         Session::flash('success', get_phrase('Course duplicated.'));
@@ -520,23 +527,23 @@ class CourseController extends Controller
         $course = Course::where('id', $id)->first();
 
         config([
-            'mail.mailers.smtp.transport'  => get_settings('protocol'),
-            'mail.mailers.smtp.host'       => get_settings('smtp_host'),
-            'mail.mailers.smtp.port'       => get_settings('smtp_port'),
+            'mail.mailers.smtp.transport' => get_settings('protocol'),
+            'mail.mailers.smtp.host' => get_settings('smtp_host'),
+            'mail.mailers.smtp.port' => get_settings('smtp_port'),
             'mail.mailers.smtp.encryption' => get_settings('smtp_crypto'),
-            'mail.mailers.smtp.username'   => get_settings('smtp_from_email'),
-            'mail.mailers.smtp.password'   => get_settings('smtp_pass'),
-            'mail.from.address'            => get_settings('smtp_from_email'),
-            'mail.from.name'               => get_settings('smtp_user'),
+            'mail.mailers.smtp.username' => get_settings('smtp_from_email'),
+            'mail.mailers.smtp.password' => get_settings('smtp_pass'),
+            'mail.from.address' => get_settings('smtp_from_email'),
+            'mail.from.name' => get_settings('smtp_user'),
         ]);
 
-        $mail_data['subject']     = $request->subject;
+        $mail_data['subject'] = $request->subject;
         $mail_data['description'] = $request->message;
 
         try {
             Mail::to($course->creator->email)->send(new Mailer($mail_data));
         } catch (Exception $e) {
-            
+
         }
 
         Session::flash('success', get_phrase('Course activated successfully'));

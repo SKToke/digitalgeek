@@ -35,6 +35,41 @@
                                         <label class="form-label ol-form-label" for="description">{{ get_phrase('Description') }}</label>
                                         <textarea name="description" placeholder="{{ get_phrase('Enter Description') }}" class="form-control ol-form-control text_editor"></textarea>
                                     </div>
+                                    <div class="fpb-7 mb-3">
+                                        <label class="form-label ol-form-label col-sm-2 col-form-label">{{ get_phrase('Course type') }}</label>
+                                        <div class="eRadios">
+                                            <div class="form-check mr-2">
+                                                <input type="radio" id="type_recorded" name="c_course_type" class="form-check-input eRadioSuccess" value="recorded" onchange="$('#c-non-recorded').slideUp(200)">
+                                                <label class="form-check-label" for="type_recorded">{{ get_phrase('Recorded') }}</label>
+                                            </div>
+                                            <div class="form-check mr-2">
+                                                <input type="radio" id="type_session" name="c_course_type" class="form-check-input eRadioSuccess" value="session" onchange="$('#c-non-recorded').slideDown(200)">
+                                                <label class="form-check-label" for="type_session">{{ get_phrase('Session') }}</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input type="radio" id="type_live" name="c_course_type" class="form-check-input eRadioSuccess" value="live" onchange="$('#c-non-recorded').slideDown(200)" checked>
+                                                <label class="form-check-label" for="type_live">{{ get_phrase('Live') }}</label>
+                                            </div>
+                                            <div class="c-non-recorded" id="c-non-recorded">
+                                                <div class="fpb-7 mb-3">
+                                                    <label class="form-label ol-form-label" for="c_class_starts">{{ get_phrase('Class starts') }}<span class="text-danger ms-1">*</span></label>
+                                                    <input type="text" name = "c_class_starts" class="form-control ol-form-control" placeholder="{{ get_phrase('Enter Class Starts Time') }}">
+                                                </div>
+                                                <div class="fpb-7 mb-3">
+                                                    <label class="form-label ol-form-label" for="c_class_time">{{ get_phrase('Class time') }}</label>
+                                                    <input type="text" name = "c_class_time" class="form-control ol-form-control" placeholder="{{ get_phrase('Enter Class Time') }}">
+                                                </div>
+                                                <div class="fpb-7 mb-3">
+                                                    <label class="form-label ol-form-label" for="c_number_of_class">{{ get_phrase('Number of Class') }}</label>
+                                                    <input type="text" name = "c_number_of_class" class="form-control ol-form-control" placeholder="{{ get_phrase('Enter Number of Class') }}">
+                                                </div>
+                                                <div class="fpb-7 mb-3">
+                                                    <label class="form-label ol-form-label" for="c_batch_number">{{ get_phrase('Batch Number') }}</label>
+                                                    <input type="text" name = "c_batch_number" class="form-control ol-form-control" placeholder="{{ get_phrase('Enter Batch Number') }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="fpb-7 mb-2 ">
                                         <label for="course_status" class="col-sm-2 col-form-label">{{ get_phrase('Create as') }}
                                             <span class="text-danger ms-1">*</span></label>
