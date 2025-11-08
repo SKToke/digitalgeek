@@ -22,12 +22,18 @@ class CourseController extends Controller
     public function index(Request $request)
     {
         $category = 'all';
+        $c_course_type = 'all';
         $status = 'all';
         $instructor = 'all';
         $price = 'all';
 
         $query = Course::query();
         $query1 = Course::query();
+
+        if (isset($request->c_course_type) && $request->c_course_type != '' && $request->c_course_type != 'all') {
+            $page_data['c_course_type'] = $request->c_course_type;
+            $query = $query->where('c_course_type', $request->c_course_type);
+        }
 
         if (isset($request->category) && $request->category != '' && $request->category != 'all') {
 
@@ -125,11 +131,12 @@ class CourseController extends Controller
             'outcomes' => 'array',
             'faqs' => 'array',
             'instructors' => 'required|array|min:1',
+
             'c_course_type' => 'required|in:recorded,session,live',
             'c_class_starts' => 'required_if:c_course_type,session,live|max:255',
-            'c_class_time' => 'max:255',
-            'c_number_of_class' => 'int|max:255',
-            'c_batch_number' => 'int|max:255',
+            'c_class_time' => 'nullable|max:255',
+            'c_number_of_class' => 'nullable|int|max:255',
+            'c_batch_number' => 'nullable|int|max:255',
         ]);
         //for normal form submission
 
@@ -146,12 +153,12 @@ class CourseController extends Controller
         $data['discount_flag'] = $request->discount_flag;
         $data['discounted_price'] = $request->discounted_price;
         $data['enable_drip_content'] = $request->enable_drip_content;
-        $data['c_course_type'] = $request->c_course_type;
-        $data['c_class_starts'] = $request->c_class_starts;
-        $data['c_class_time'] = $request->c_class_time;
-        $data['c_number_of_class'] = $request->c_number_of_class;
-        $data['c_batch_number'] = $request->c_batch_number;
 
+        $data['c_course_type'] = $request->c_course_type;
+        $data['c_class_starts'] = "recorded" != $request->c_course_type ? $request->c_class_starts : null;
+        $data['c_class_time'] = "recorded" != $request->c_course_type ? $request->c_class_time : null;
+        $data['c_number_of_class'] = "recorded" != $request->c_course_type ? $request->c_number_of_class : null;
+        $data['c_batch_number'] = "recorded" != $request->c_course_type ? $request->c_batch_number : null;
 
         $drip_content_settings = '{"lesson_completion_role":"percentage","minimum_duration":15,"minimum_percentage":"30","locked_lesson_message":"&lt;h3 xss=&quot;removed&quot; style=&quot;text-align: center; &quot;&gt;&lt;span xss=&quot;removed&quot;&gt;&lt;strong&gt;Permission denied!&lt;\/strong&gt;&lt;\/span&gt;&lt;\/h3&gt;&lt;p xss=&quot;removed&quot; style=&quot;text-align: center; &quot;&gt;&lt;span xss=&quot;removed&quot;&gt;This course supports drip content, so you must complete the previous lessons.&lt;\/span&gt;&lt;\/p&gt;"}';
 
@@ -246,6 +253,12 @@ class CourseController extends Controller
                 'language' => 'required',
                 'status' => 'required|in:active,pending,draft,private,upcoming,inactive',
                 'instructors' => 'required|array|min:1',
+
+                'c_course_type' => 'required|in:recorded,session,live',
+                'c_class_starts' => 'required_if:c_course_type,session,live|max:255',
+                'c_class_time' => 'nullable|max:255',
+                'c_number_of_class' => 'nullable|int|max:255',
+                'c_batch_number' => 'nullable|int|max:255',
             ];
 
             $data['title'] = $request->title;
@@ -257,6 +270,11 @@ class CourseController extends Controller
             $data['language'] = strtolower($request->language);
             $data['status'] = $request->status;
             $data['instructor_ids'] = json_encode($request->instructors);
+            $data['c_course_type'] = $request->c_course_type;
+            $data['c_class_starts'] = "recorded" != $request->c_course_type ? $request->c_class_starts : null;
+            $data['c_class_time'] = "recorded" != $request->c_course_type ? $request->c_class_time : null;
+            $data['c_number_of_class'] = "recorded" != $request->c_course_type ? $request->c_number_of_class : null;
+            $data['c_batch_number'] = "recorded" != $request->c_course_type ? $request->c_batch_number : null;
         } elseif ($request->tab == 'pricing') {
             $rules = [
                 'is_paid' => Rule::in(['0', '1']),
