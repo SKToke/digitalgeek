@@ -8,12 +8,11 @@ use App\Http\Controllers\frontend\CourseController;
 use App\Http\Controllers\frontend\EbookController;
 use App\Http\Controllers\frontend\HomeController;
 use App\Http\Controllers\frontend\InstructorController;
+use App\Http\Controllers\frontend\KnowledgeBaseTopicController;
+use App\Http\Controllers\frontend\LanguageController;
 use App\Http\Controllers\frontend\NewsletterController;
 use App\Http\Controllers\frontend\TeamTrainingController;
 use App\Http\Controllers\frontend\TutorBookingController;
-use App\Http\Controllers\frontend\LanguageController;
-use App\Http\Controllers\frontend\KnowledgeBaseTopicController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(HomeController::class)->group(function () {
@@ -25,6 +24,7 @@ Route::controller(HomeController::class)->group(function () {
 // course page
 Route::controller(CourseController::class)->group(function () {
     Route::get('courses/{category?}', 'index')->name('courses');
+    Route::get('courses/live', 'index_live')->name('courses.live');
     Route::get('change/layout', 'change_layout')->name('change.layout');
     Route::get('course/{slug}', 'course_details')->name('course.details');
 });
@@ -109,8 +109,8 @@ Route::controller(TutorBookingController::class)->group(function () {
 
 //knowledge base
 Route::controller(KnowledgeBaseTopicController::class)->group(function () {
-    Route::get('knowledge-base-topicks','index')->name('knowledge.base.topicks');
-    Route::get('article-single/{id}','show')->name('knowledge.base.article');
+    Route::get('knowledge-base-topicks', 'index')->name('knowledge.base.topicks');
+    Route::get('article-single/{id}', 'show')->name('knowledge.base.article');
 });
 
 
